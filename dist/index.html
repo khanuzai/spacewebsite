@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #000; overflow: hidden; }
+
+    #loader {
+      position: fixed; inset: 0;
+      background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+      font-family: 'Inter', system-ui, sans-serif;
+      transition: opacity 1.2s ease;
+    }
+    #loader.out { opacity: 0; pointer-events: none; }
+
+    /* Animated star field behind the loader */
+    #loader-stars {
+      position: absolute; inset: 0;
+      overflow: hidden;
+    }
+    .l-star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle var(--dur, 3s) infinite ease-in-out var(--delay, 0s);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: var(--min-op, 0.1); }
+      50%       { opacity: var(--max-op, 0.8); }
+    }
+
+    /* Main content */
+    #loader-content {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0;
+    }
+
+    #loader-title {
+      font-size: 11px;
+      font-weight: 200;
+      letter-spacing: 0.6em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 40px;
+    }
+
+    /* Animated sun orb */
+    #loader-orb {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 38%,
+        #fff8e0 0%, #ffe066 25%, #ff8c00 55%, #b34000 80%, #2a0800 100%);
+      box-shadow:
+        0 0 30px 8px  rgba(255,180,50,0.5),
+        0 0 80px 20px rgba(255,120,20,0.25),
+        0 0 160px 50px rgba(255,80,10,0.1);
+      animation: orbPulse 4s ease-in-out infinite;
+      margin-bottom: 48px;
+      flex-shrink: 0;
+    }
+    @keyframes orbPulse {
+      0%, 100% { box-shadow: 0 0 30px 8px rgba(255,180,50,0.5), 0 0 80px 20px rgba(255,120,20,0.25), 0 0 160px 50px rgba(255,80,10,0.1); }
+      50%       { box-shadow: 0 0 40px 14px rgba(255,200,80,0.7), 0 0 100px 30px rgba(255,140,30,0.35), 0 0 200px 70px rgba(255,80,10,0.15); }
+    }
+
+    #loader-headline {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 100;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 8px;
+    }
+
+    #loader-sub {
+      font-size: 10px;
+      font-weight: 200;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.22);
+      margin-bottom: 52px;
+    }
+
+    /* Progress line */
+    #loader-line {
+      width: 200px; height: 1px;
+      background: rgba(255,255,255,0.06);
+      position: relative; overflow: hidden;
+      margin-bottom: 20px;
+    }
+    #loader-line::after {
+      content: '';
+      position: absolute; left: -100%; top: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(200,220,255,0.8), transparent);
+      animation: scanline 1.6s ease-in-out infinite;
+    }
+    @keyframes scanline {
+      from { left: -100%; }
+      to   { left:  100%; }
+    }
+    #loader-bar-fill {
+      position: absolute; left: 0; top: 0;
+      height: 100%;
+      background: rgba(180,210,255,0.5);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    #loader-hint {
+      font-size: 9px;
+      font-weight: 200;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.15);
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/index-B166hUpD.js"></script>
+</head>
+<body>
+  <div id="loader">
+    <div id="loader-stars"></div>
+    <div id="loader-content">
+      <div id="loader-title">An Interactive Experience</div>
+      <div id="loader-orb"></div>
+      <div id="loader-headline">Solar System</div>
+      <div id="loader-sub">WebGL · Cinematic</div>
+      <div id="loader-line"><div id="loader-bar-fill"></div></div>
+      <div id="loader-hint" id="loader-status">Initializing…</div>
+    </div>
+  </div>
+
+  <script>
+    // Scatter a few dozen stars behind the loader
+    const container = document.getElementById('loader-stars');
+    for (let i = 0; i < 120; i++) {
+      const s = document.createElement('div');
+      const sz = Math.random() < 0.92 ? 1 : (Math.random() < 0.7 ? 2 : 3);
+      s.className = 'l-star';
+      s.style.cssText = `
+        width:${sz}px; height:${sz}px;
+        left:${Math.random()*100}%;
+        top:${Math.random()*100}%;
+        --dur:${2+Math.random()*4}s;
+        --delay:${Math.random()*4}s;
+        --min-op:${0.05+Math.random()*0.1};
+        --max-op:${0.4+Math.random()*0.6};
+      `;
+      container.appendChild(s);
+    }
+  </script>
+
+</body>
+</html>

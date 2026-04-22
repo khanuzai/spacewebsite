@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #000; overflow: hidden; }
+
+    /* ── Black curtain — sits over the scene until everything is ready ── */
+    #black-curtain {
+      position: fixed; inset: 0;
+      background: #000;
+      z-index: 9998;
+      pointer-events: none;
+      opacity: 1;
+      /* transition injected by JS at reveal time */
+    }
+
+    /* ── Production card — above the curtain ── */
+    #prod-card {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+      animation: prodFade 4.5s ease forwards;
+    }
+    #prod-text {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 100;
+      letter-spacing: 0.4em;
+      color: rgba(255, 255, 255, 0.70);
+    }
+    @keyframes prodFade {
+      0%   { opacity: 0; }
+      33%  { opacity: 1; }   /* fade in complete at 1.5 s */
+      78%  { opacity: 1; }   /* hold until 3.5 s         */
+      100% { opacity: 0; }   /* fade out by 4.5 s        */
+    }
+
+    /* Waiting state: textures still loading after card sequence ends */
+    #prod-card.waiting {
+      animation: prodWait 2.5s ease-in-out infinite !important;
+    }
+    @keyframes prodWait {
+      0%, 100% { opacity: 0.07; }
+      50%       { opacity: 0.20; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="black-curtain"></div>
+
+  <div id="prod-card">
+    <span id="prod-text">a zai production</span>
+  </div>
+
+  <script type="module">
+    const CARD_MS   = 4500;   // must match CSS animation duration
+    const REVEAL_MS = 1500;   // curtain fade-out duration
+    const FALLBACK_MS = 14000; // reveal anyway if scene-ready never fires
+
+    const card    = document.getElementById('prod-card');
+    const curtain = document.getElementById('black-curtain');
+
+    let cardDone     = false;
+    let texturesDone = false;
+
+    function reveal() {
+      card.remove();
+      curtain.style.transition = `opacity ${REVEAL_MS}ms ease`;
+      curtain.style.opacity    = '0';
+      setTimeout(() => curtain.remove(), REVEAL_MS + 100);
+    }
+
+    function tryReveal() {
+      if (cardDone && texturesDone) reveal();
+    }
+
+    // ── Card sequence ends at CARD_MS ─────────────────────────────────────
+    setTimeout(() => {
+      cardDone = true;
+      if (texturesDone) {
+        tryReveal();
+      } else {
+        // Textures still loading — keep card barely visible with gentle pulse
+        card.classList.add('waiting');
+      }
+    }, CARD_MS);
+
+    // ── Three.js signals all textures loaded ──────────────────────────────
+    window.addEventListener('scene-ready', () => {
+      texturesDone = true;
+      card.classList.remove('waiting');
+      tryReveal();
+    }, { once: true });
+
+    // ── Safety fallback: reveal no matter what after FALLBACK_MS ─────────
+    setTimeout(() => {
+      if (!texturesDone) {
+        texturesDone = true;
+        tryReveal();
+      }
+    }, FALLBACK_MS);
+
+    // ── Start building the scene immediately behind the curtain ───────────
+    import('./src/main.js');
+  </script>
+</body>
+</html>
