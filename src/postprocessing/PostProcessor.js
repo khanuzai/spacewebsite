@@ -37,9 +37,9 @@ export class PostProcessor {
     // 2 — Bloom (sun glow + atmosphere edges)
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(w, h),
-      1.4,   // strength
-      0.8,   // radius
-      0.9    // threshold — only sun core + atmosphere edges trigger bloom
+      0.8,   // strength
+      0.6,   // radius
+      0.85   // threshold — only sun core + atmosphere edges trigger bloom
     );
     this.composer.addPass(this.bloomPass);
 
