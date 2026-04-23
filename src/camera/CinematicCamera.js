@@ -142,15 +142,24 @@ export class CinematicCamera {
     // Re-sample the planet's live world position each frame so we follow a moving target
     const live = this._flyGetTarget();
 
-    // Destination = planet position + approach direction * desired distance
-    // This is recomputed every frame but approach direction is fixed so we always
-    // end up at the right planet regardless of where it moves during the flight.
+    // Recompute approach direction each frame: from fly-start toward the planet's CURRENT
+    // position. This keeps the camera homing in from its original bearing relative to
+    // wherever the planet is now, so it always lands perfectly centered regardless of
+    // how far the planet has moved in its orbit during the flight.
+    const dir = new THREE.Vector3().subVectors(this._flyStart, live);
+    if (dir.lengthSq() > 0.001) dir.normalize();
+    else dir.copy(this._flyApproachDir);
+
     const dest = new THREE.Vector3()
       .copy(live)
-      .addScaledVector(this._flyApproachDir, this._flyTargetDist);
+      .addScaledVector(dir, this._flyTargetDist);
 
     this.camera.position.lerpVectors(this._flyStart, dest, eased);
     this.controls.target.lerpVectors(this._flyLookStart, live, eased);
+
+    // OrbitControls is disabled during fly-to so it never calls camera.lookAt().
+    // Call it explicitly every frame to guarantee the planet stays perfectly centred.
+    this.camera.lookAt(live);
 
     if (t >= 1.0) {
       if (this._flyCallback) {
@@ -191,6 +200,9 @@ export class CinematicCamera {
 
     this.camera.position.lerp(new THREE.Vector3(x, y, z), 0.04);
     this.controls.target.lerp(target, 0.06);
+
+    // OrbitControls is disabled during cinematic orbit so point the camera explicitly.
+    this.camera.lookAt(target);
 
     // Tour: advance to next planet after orbitDuration
     if (this._tourActive && this._stateTimer > this._orbitDuration) {

@@ -285,7 +285,7 @@ export class UI {
 
     planets.forEach(p => {
       const d = camera.position.distanceTo(p.worldPosition);
-      const threshold = p.data.displayRadius * 12;
+      const threshold = p.data.displayRadius * 8;
       if (d < threshold && d < minDist) {
         minDist = d;
         nearest = p;

@@ -304,7 +304,7 @@ export class Planet {
 
   get worldPosition() {
     const pos = new THREE.Vector3();
-    this.group.getWorldPosition(pos);
+    this.mesh.getWorldPosition(pos);
     return pos;
   }
 }
